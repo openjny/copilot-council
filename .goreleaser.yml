@@ -120,6 +120,7 @@ brews:
     repository:
       owner: openjny
       name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
     commit_author:
       name: goreleaserbot
       email: bot@goreleaser.com
