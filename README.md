@@ -58,17 +58,9 @@ Download from the [releases page](https://github.com/openjny/copilot-council/rel
 #### Linux
 
 ```bash
-# Download and extract
 wget https://github.com/openjny/copilot-council/releases/latest/download/copilot-council_linux_amd64.tar.gz
 tar -xzf copilot-council_linux_amd64.tar.gz
-
-# Install (requires sudo)
 sudo mv copilot-council /usr/local/bin/
-
-# Or install to user directory (no sudo required)
-mkdir -p ~/.local/bin
-mv copilot-council ~/.local/bin/
-# Add ~/.local/bin to PATH if not already
 ```
 
 #### Windows
