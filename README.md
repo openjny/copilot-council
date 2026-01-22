@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/openjny/copilot-council/actions/workflows/ci.yml/badge.svg)](https://github.com/openjny/copilot-council/actions/workflows/ci.yml)
 [![Release](https://github.com/openjny/copilot-council/actions/workflows/release.yml/badge.svg)](https://github.com/openjny/copilot-council/actions/workflows/release.yml)
+[![Latest Release](https://img.shields.io/github/v/release/openjny/copilot-council)](https://github.com/openjny/copilot-council/releases/latest)
 [![Go Report Card](https://goreportcard.com/badge/github.com/openjny/copilot-council)](https://goreportcard.com/report/github.com/openjny/copilot-council)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -57,9 +58,17 @@ Download from the [releases page](https://github.com/openjny/copilot-council/rel
 #### Linux
 
 ```bash
+# Download and extract
 wget https://github.com/openjny/copilot-council/releases/latest/download/copilot-council_linux_amd64.tar.gz
 tar -xzf copilot-council_linux_amd64.tar.gz
+
+# Install (requires sudo)
 sudo mv copilot-council /usr/local/bin/
+
+# Or install to user directory (no sudo required)
+mkdir -p ~/.local/bin
+mv copilot-council ~/.local/bin/
+# Add ~/.local/bin to PATH if not already
 ```
 
 #### Windows
@@ -93,6 +102,44 @@ copilot-council --verbose "Complex question"
 copilot-council --timeout 120 "Long question"
 ```
 
+### Example Output
+
+```
+╭────────────────────────────────────────────────────────╮
+│          🏛️  Council - AI Model Council               │
+╰────────────────────────────────────────────────────────╯
+
+❓ Question: What is quantum entanglement?
+
+🔄 Querying models in parallel...
+
+  [✓] claude-sonnet-4.5         ⏱️  4.2s
+  [✓] gpt-5.2                   ⏱️  3.8s
+  [✓] gemini-3-pro-preview      ⏱️  5.1s
+
+╭────────────────────────────────────────────────────────╮
+│ 🔄 Synthesizing responses...                          │
+╰────────────────────────────────────────────────────────╯
+  [✓] Synthesis complete (2.1s)
+
+╭────────────────────────────────────────────────────────╮
+│ ⭐ FINAL ANSWER                                        │
+╰────────────────────────────────────────────────────────╯
+
+Quantum entanglement is a phenomenon where two or more particles
+become correlated in such a way that the quantum state of one
+particle cannot be described independently of the others...
+
+╭────────────────────────────────────────────────────────╮
+│ 📊 EXECUTION SUMMARY                                   │
+├────────────────────────────────────────────────────────┤
+│ Models queried:  3/3 successful                        │
+│ Fastest model:   gpt-5.2 (3.8s)                        │
+│ Total time:      7.4s                                  │
+│ Parallel speedup: ~1.8x                                │
+╰────────────────────────────────────────────────────────╯
+```
+
 ## Options
 
 | Option                | Default                                          | Description       |
@@ -104,20 +151,25 @@ copilot-council --timeout 120 "Long question"
 
 ## Available Models
 
-- `claude-sonnet-4.5`
-- `claude-haiku-4.5`
-- `claude-opus-4.5`
+### Claude
+- `claude-sonnet-4.5` ⭐ (Default, Recommended)
+- `claude-haiku-4.5` (Fast, cost-effective)
+- `claude-opus-4.5` (Most capable)
 - `claude-sonnet-4`
-- `gpt-5.2`
-- `gpt-5.2-codex`
+
+### GPT
+- `gpt-5.2` ⭐ (Default, Recommended)
+- `gpt-5.2-codex` (Optimized for code)
 - `gpt-5.1-codex-max`
 - `gpt-5.1-codex`
 - `gpt-5.1`
 - `gpt-5`
 - `gpt-5.1-codex-mini`
 - `gpt-5-mini`
-- `gpt-4.1`
-- `gemini-3-pro-preview`
+- `gpt-4.1` (Aggregator default)
+
+### Gemini
+- `gemini-3-pro-preview` ⭐ (Default, Recommended)
 
 You can look up the latest available models via `copilot --help`.
 
