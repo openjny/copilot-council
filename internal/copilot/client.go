@@ -106,7 +106,11 @@ func (c *Client) AskMultipleModels(ctx context.Context, models []string, questio
 				}
 				return
 			}
-			defer session.Destroy()
+			defer func() {
+				if err := session.Destroy(); err != nil {
+					// Log error but don't fail the operation
+				}
+			}()
 
 			// Setup event collection
 			done := make(chan bool)
@@ -169,7 +173,11 @@ func (c *Client) AskSingleModel(ctx context.Context, model string, question stri
 	if err != nil {
 		return "", time.Since(startTime), err
 	}
-	defer session.Destroy()
+	defer func() {
+		if err := session.Destroy(); err != nil {
+			// Log error but don't fail the operation
+		}
+	}()
 
 	done := make(chan bool)
 	var content string

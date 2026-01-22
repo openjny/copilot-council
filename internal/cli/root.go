@@ -18,8 +18,6 @@ var (
 	timeout    int
 	verbose    bool
 	version    = "dev"
-	commit      = "none"
-	date        = "unknown"
 )
 
 var rootCmd = &cobra.Command{

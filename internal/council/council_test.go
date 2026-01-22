@@ -12,7 +12,7 @@ func TestDefaultModels(t *testing.T) {
 
 	expectedModels := []string{
 		"claude-sonnet-4.5",
-		"gpt-5",
+		"gpt-5.2",
 		"gemini-3-pro-preview",
 	}
 
@@ -29,7 +29,7 @@ func TestDefaultAggregator(t *testing.T) {
 		t.Error("DefaultAggregator() returned empty string")
 	}
 	
-	expected := "claude-opus-4.5"
+	expected := "gpt-4.1"
 	if aggregator != expected {
 		t.Errorf("Expected aggregator %s, got %s", expected, aggregator)
 	}
