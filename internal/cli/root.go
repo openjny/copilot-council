@@ -17,7 +17,6 @@ var (
 	aggregator string
 	timeout    int
 	verbose    bool
-	version    = "dev"
 )
 
 var rootCmd = &cobra.Command{
@@ -26,9 +25,8 @@ var rootCmd = &cobra.Command{
 	Long: `Copilot Council is a CLI tool that implements the "Council Pattern".
 It asks the same question to multiple AI models (Claude, GPT, Gemini) in parallel,
 then aggregates their responses using another model to produce a final synthesized answer.`,
-	Version: version,
-	Args:    cobra.ExactArgs(1),
-	RunE:    run,
+	Args: cobra.ExactArgs(1),
+	RunE: run,
 	Example: `  # Ask a question using default models
   copilot-council "What is the capital of France?"
 
@@ -118,7 +116,7 @@ func run(cmd *cobra.Command, args []string) error {
 				successCount++
 			}
 		}
-		
+
 		printer.PrintAggregationStart(aggregator, successCount)
 		printer.StopAggregationSpinner(result.AggregationDuration)
 		printer.PrintFinalResult(result.AggregatedResponse)
@@ -135,7 +133,8 @@ func run(cmd *cobra.Command, args []string) error {
 }
 
 // Execute runs the root command
-func Execute() {
+func Execute(ver string) {
+	rootCmd.Version = ver
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}

@@ -1,6 +1,8 @@
 BINARIES := copilot-council
 BUILD_DIR := build
 MAIN_PATH := ./cmd/copilot-council
+VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
+LDFLAGS := -X main.version=$(VERSION)
 
 .PHONY: all build clean install test lint help
 
@@ -8,9 +10,9 @@ all: build
 
 ## build: Build the copilot-council binary
 build:
-	@echo "Building copilot-council..."
+	@echo "Building copilot-council $(VERSION)..."
 	@mkdir -p $(BUILD_DIR)
-	go build -o $(BUILD_DIR)/$(BINARIES) $(MAIN_PATH)
+	go build -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARIES) $(MAIN_PATH)
 	@echo "Build complete: $(BUILD_DIR)/$(BINARIES)"
 
 ## install: Install copilot-council to GOPATH/bin
