@@ -11,19 +11,19 @@ import (
 
 // Config represents the configuration for the council
 type Config struct {
-	Models      []string
-	Aggregator  string
-	Timeout     time.Duration
-	Verbose     bool
-	OriginalQ   string
+	Models     []string
+	Aggregator string
+	Timeout    time.Duration
+	Verbose    bool
+	OriginalQ  string
 }
 
 // Result represents the final result from the council
 type Result struct {
-	ModelResponses []copilot.Response
-	AggregatedResponse string
+	ModelResponses      []copilot.Response
+	AggregatedResponse  string
 	AggregationDuration time.Duration
-	Error error
+	Error               error
 }
 
 // Council orchestrates multiple AI models and aggregates their responses
@@ -103,25 +103,25 @@ func (c *Council) Execute(ctx context.Context, question string, progressCallback
 func (c *Council) buildAggregationPrompt(originalQuestion string, responses []copilot.Response) string {
 	var sb strings.Builder
 
-	sb.WriteString(fmt.Sprintf("以下は同じ質問「%s」に対する複数のAIモデルからの回答です：\n\n", originalQuestion))
+	sb.WriteString(fmt.Sprintf("Below are responses from multiple AI models to the same question: \"%s\"\n\n", originalQuestion))
 
 	for _, resp := range responses {
-		sb.WriteString(fmt.Sprintf("## %s の回答:\n", resp.Model))
+		sb.WriteString(fmt.Sprintf("## Response from %s:\n", resp.Model))
 		if resp.Error != nil {
-			sb.WriteString(fmt.Sprintf("(エラー: %v)\n\n", resp.Error))
+			sb.WriteString(fmt.Sprintf("(Error: %v)\n\n", resp.Error))
 		} else {
 			sb.WriteString(resp.Content)
 			sb.WriteString("\n\n")
 		}
 	}
 
-	sb.WriteString(`これらの回答を分析し、以下の観点で最も正確で包括的な最終回答を作成してください：
-1. 共通している重要なポイント
-2. 各モデル特有の洞察
-3. 矛盾がある場合はその調整
-4. 最も信頼できる情報の選択
+	sb.WriteString(`Analyze these responses and create the most accurate and comprehensive final answer based on the following perspectives:
+1. Key points that are common across responses
+2. Unique insights from each model
+3. Resolution of any contradictions
+4. Selection of the most reliable information
 
-最終回答を提供してください。回答は日本語で、明確で簡潔にまとめてください。`)
+Please provide a final answer that is clear and concise.`)
 
 	return sb.String()
 }
