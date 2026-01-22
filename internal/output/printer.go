@@ -9,6 +9,7 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
 	"github.com/openjny/council/internal/copilot"
+	"github.com/openjny/council/internal/council"
 	"golang.org/x/term"
 )
 
@@ -24,20 +25,20 @@ var (
 
 // Printer handles formatted output
 type Printer struct {
-	verbose      bool
-	spinners     map[string]*spinner.Spinner
-	isTerminal   bool
-	noSpinner    bool
+	verbose    bool
+	spinners   map[string]*spinner.Spinner
+	isTerminal bool
+	noSpinner  bool
 }
 
 // NewPrinter creates a new output printer
 func NewPrinter(verbose bool) *Printer {
 	// Check if stdout is a terminal
 	isTerminal := term.IsTerminal(int(os.Stdout.Fd()))
-	
+
 	// Disable spinner if not a TTY or if running in certain environments
 	noSpinner := !isTerminal || os.Getenv("TERM") == "dumb" || os.Getenv("CI") == "true"
-	
+
 	return &Printer{
 		verbose:    verbose,
 		spinners:   make(map[string]*spinner.Spinner),
@@ -49,7 +50,7 @@ func NewPrinter(verbose bool) *Printer {
 // PrintBanner prints the application banner
 func (p *Printer) PrintBanner() {
 	titleColor.Println("╔════════════════════════════════════════════════════════╗")
-	titleColor.Println("║          🏛️  Council - AI Model Council               ║")
+	titleColor.Println("║          🏛️  Council - AI Model Council                ║")
 	titleColor.Println("╚════════════════════════════════════════════════════════╝")
 	fmt.Println()
 }
@@ -58,12 +59,23 @@ func (p *Printer) PrintBanner() {
 func (p *Printer) PrintQuestion(question string) {
 	titleColor.Print("❓ Question: ")
 	fmt.Println(question)
-	fmt.Println()
 }
 
 // PrintQueryingStart prints when querying starts
 func (p *Printer) PrintQueryingStart() {
-	titleColor.Println("🔄 Querying models in parallel...")
+	fmt.Println()
+	fmt.Println("╔════════════════════════════════════════════════════════╗")
+	titleColor.Println("║ 🔄 Querying models in parallel...                      ║")
+	fmt.Println("╚════════════════════════════════════════════════════════╝")
+	fmt.Println()
+}
+
+// PrintReviewStart prints when peer review starts
+func (p *Printer) PrintReviewStart(modelCount int) {
+	fmt.Println()
+	fmt.Println("╔════════════════════════════════════════════════════════╗")
+	titleColor.Println("║ 📝 Conducting peer review...                           ║")
+	fmt.Println("╚════════════════════════════════════════════════════════╝")
 	fmt.Println()
 }
 
@@ -74,7 +86,7 @@ func (p *Printer) StartModelSpinner(model string) {
 		fmt.Printf("  [⋯] %s\n", model)
 		return
 	}
-	
+
 	s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
 	s.Suffix = fmt.Sprintf("  %s", model)
 	s.Writer = os.Stderr // Write to stderr to avoid output conflicts
@@ -93,12 +105,12 @@ func (p *Printer) StopModelSpinner(model string, duration time.Duration, err err
 		}
 		return
 	}
-	
+
 	if s, ok := p.spinners[model]; ok {
 		s.Stop()
 		delete(p.spinners, model)
 	}
-	
+
 	if err != nil {
 		errorColor.Printf("  [✗] %-25s ⏱️  %.2fs  ❌ %v\n", model, duration.Seconds(), err)
 	} else {
@@ -130,7 +142,7 @@ func (p *Printer) PrintDetailedError(model string, err error, duration time.Dura
 	fmt.Printf("║ Model:      %-41s ║\n", model)
 	fmt.Printf("║ Issue:      %-41s ║\n", truncate(err.Error(), 41))
 	fmt.Printf("║ Duration:   %-41s ║\n", fmt.Sprintf("%.2fs", duration.Seconds()))
-	
+
 	// Suggest solution based on error
 	suggestion := getSuggestion(err)
 	if suggestion != "" {
@@ -163,19 +175,19 @@ func truncate(s string, maxLen int) string {
 func (p *Printer) PrintAggregationStart(aggregator string, modelCount int) {
 	fmt.Println()
 	fmt.Println("╔════════════════════════════════════════════════════════╗")
-	titleColor.Println("║ 🔄 Synthesizing responses...                          ║")
+	titleColor.Println("║ 🔄 Synthesizing responses...                           ║")
 	fmt.Println("╚════════════════════════════════════════════════════════╝")
-	
+
 	if p.verbose {
 		dimColor.Printf("  Aggregator: %s\n", aggregator)
 		dimColor.Printf("  Analyzing: %d responses\n", modelCount)
 	}
-	
+
 	if p.noSpinner {
 		fmt.Println("  [⋯] Processing...")
 		return
 	}
-	
+
 	// Start aggregation spinner
 	s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
 	s.Suffix = "  Processing..."
@@ -191,7 +203,7 @@ func (p *Printer) StopAggregationSpinner(duration time.Duration) {
 		fmt.Println()
 		return
 	}
-	
+
 	if s, ok := p.spinners["aggregator"]; ok {
 		s.Stop()
 		delete(p.spinners, "aggregator")
@@ -216,18 +228,25 @@ func (p *Printer) PrintError(err error) {
 }
 
 // PrintSummary prints a summary of the execution
-func (p *Printer) PrintSummary(responses []copilot.Response, totalDuration time.Duration) {
+func (p *Printer) PrintSummary(result council.Result, totalDuration time.Duration) {
+	fmt.Println("╔════════════════════════════════════════════════════════╗")
+	titleColor.Println("║ 📊 EXECUTION SUMMARY                                   ║")
+	fmt.Println("╠════════════════════════════════════════════════════════╣")
+
+	// Stage 1: Initial Responses
 	successCount := 0
 	var fastestModel string
 	var fastestDuration time.Duration = time.Hour
 	var slowestDuration time.Duration
-	var totalModelTime time.Duration
+	var stage1Time time.Duration
 
-	for _, resp := range responses {
+	for _, resp := range result.ModelResponses {
 		if resp.Error == nil {
 			successCount++
-			totalModelTime += resp.Duration
-			
+			if resp.Duration > stage1Time {
+				stage1Time = resp.Duration // Max time (parallel execution)
+			}
+
 			if resp.Duration < fastestDuration {
 				fastestDuration = resp.Duration
 				fastestModel = resp.Model
@@ -238,32 +257,46 @@ func (p *Printer) PrintSummary(responses []copilot.Response, totalDuration time.
 		}
 	}
 
-	// Calculate speedup (sequential time vs parallel time)
-	var speedup float64
-	if totalDuration.Seconds() > 0 {
-		speedup = totalModelTime.Seconds() / totalDuration.Seconds()
+	fmt.Println("║                                                        ║")
+	titleColor.Println("║ Stage 1: Initial Responses                             ║")
+	if successCount == len(result.ModelResponses) {
+		successColor.Printf("║   Models queried:    %-33s ║\n", fmt.Sprintf("%d/%d successful", successCount, len(result.ModelResponses)))
+	} else {
+		warningColor.Printf("║   Models queried:    %-33s ║\n", fmt.Sprintf("%d/%d successful", successCount, len(result.ModelResponses)))
 	}
 
-	fmt.Println("╔════════════════════════════════════════════════════════╗")
-	titleColor.Println("║ 📊 EXECUTION SUMMARY                                   ║")
-	fmt.Println("╠════════════════════════════════════════════════════════╣")
-	
-	if successCount == len(responses) {
-		successColor.Printf("║ Models queried:  %-37s ║\n", fmt.Sprintf("%d/%d successful", successCount, len(responses)))
-	} else {
-		warningColor.Printf("║ Models queried:  %-37s ║\n", fmt.Sprintf("%d/%d successful", successCount, len(responses)))
-	}
-	
 	if successCount > 0 {
-		fmt.Printf("║ Fastest model:   %-37s ║\n", fmt.Sprintf("%s (%.2fs)", fastestModel, fastestDuration.Seconds()))
+		fmt.Printf("║   Fastest:           %-33s ║\n", fmt.Sprintf("%s (%.2fs)", fastestModel, fastestDuration.Seconds()))
+		fmt.Printf("║   Phase time:        %-33s ║\n", fmt.Sprintf("%.2fs", stage1Time.Seconds()))
 	}
-	
-	fmt.Printf("║ Total time:      %-37s ║\n", fmt.Sprintf("%.2fs", totalDuration.Seconds()))
-	
-	if speedup > 1 {
-		fmt.Printf("║ Parallel speedup: %-36s ║\n", fmt.Sprintf("~%.1fx", speedup))
+
+	// Stage 2: Peer Review
+	if len(result.Reviews) > 0 {
+		reviewSuccess := 0
+		for _, review := range result.Reviews {
+			if review.Error == nil {
+				reviewSuccess++
+			}
+		}
+
+		fmt.Println("║                                                        ║")
+		titleColor.Println("║ Stage 2: Peer Review                                   ║")
+		fmt.Printf("║   Reviews completed: %-33s ║\n", fmt.Sprintf("%d/%d successful", reviewSuccess, len(result.Reviews)))
+		fmt.Printf("║   Phase time:        %-33s ║\n", fmt.Sprintf("%.2fs", result.ReviewDuration.Seconds()))
 	}
-	
+
+	// Stage 3: Final Synthesis
+	if result.AggregationDuration > 0 {
+		fmt.Println("║                                                        ║")
+		titleColor.Println("║ Stage 3: Final Synthesis                               ║")
+		fmt.Printf("║   Phase time:        %-33s ║\n", fmt.Sprintf("%.2fs", result.AggregationDuration.Seconds()))
+	}
+
+	// Total
+	fmt.Println("║                                                        ║")
+	fmt.Println("╠════════════════════════════════════════════════════════╣")
+	fmt.Printf("║ Total execution time: %-32s ║\n", fmt.Sprintf("%.2fs", totalDuration.Seconds()))
+
 	fmt.Println("╚════════════════════════════════════════════════════════╝")
 }
 
@@ -271,5 +304,65 @@ func (p *Printer) PrintSummary(responses []copilot.Response, totalDuration time.
 func (p *Printer) PrintVerbose(format string, args ...interface{}) {
 	if p.verbose {
 		dimColor.Printf("[VERBOSE] "+format+"\n", args...)
+	}
+}
+
+// PrintPrompt prints the prompt sent to a model (verbose mode)
+func (p *Printer) PrintPrompt(model, prompt string) {
+	if !p.verbose {
+		return
+	}
+
+	fmt.Println()
+	fmt.Println("┌────────────────────────────────────────────────────────┐")
+	modelColor.Printf("│ 📤 PROMPT TO: %-39s │\n", model)
+	fmt.Println("└────────────────────────────────────────────────────────┘")
+	dimColor.Println(prompt)
+	fmt.Println()
+}
+
+// PrintResponse prints the response from a model (verbose mode)
+func (p *Printer) PrintResponse(model, response string) {
+	if !p.verbose {
+		return
+	}
+
+	fmt.Println("┌────────────────────────────────────────────────────────┐")
+	modelColor.Printf("│ 📥 RESPONSE FROM: %-35s │\n", model)
+	fmt.Println("└────────────────────────────────────────────────────────┘")
+	fmt.Println(response)
+	fmt.Println()
+}
+
+// PrintReviewPhaseComplete prints when peer review phase is complete
+func (p *Printer) PrintReviewPhaseComplete(reviewCount int, duration time.Duration) {
+	fmt.Println()
+	successColor.Printf("  [✓] Peer review complete: %d models reviewed each other (%.2fs)\n", reviewCount, duration.Seconds())
+}
+
+// PrintPeerReviews prints detailed peer review information (verbose mode)
+func (p *Printer) PrintPeerReviews(reviews []council.Review) {
+	if len(reviews) == 0 {
+		return
+	}
+
+	fmt.Println()
+	fmt.Println("╔════════════════════════════════════════════════════════╗")
+	titleColor.Println("║ 📝 PEER REVIEW RESULTS                                 ║")
+	fmt.Println("╚════════════════════════════════════════════════════════╝")
+	fmt.Println()
+
+	for _, review := range reviews {
+		modelColor.Printf("🔍 %s's Evaluation:\n", review.ReviewerModel)
+		if review.Error != nil {
+			errorColor.Printf("  Error: %v\n", review.Error)
+		} else if len(review.Rankings) > 0 {
+			for _, ranking := range review.Rankings {
+				fmt.Printf("  Rank %d: %s\n", ranking.Rank, ranking.Reasoning)
+			}
+		} else {
+			dimColor.Println("  (No structured rankings extracted)")
+		}
+		fmt.Println()
 	}
 }

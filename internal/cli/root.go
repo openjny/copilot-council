@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/openjny/council/internal/council"
@@ -64,10 +63,6 @@ func run(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("at least one model must be specified")
 	}
 
-	printer.PrintVerbose("Using models: %s", strings.Join(models, ", "))
-	printer.PrintVerbose("Aggregator: %s", aggregator)
-	printer.PrintVerbose("Timeout: %d seconds", timeout)
-
 	// Create council
 	c, err := council.NewCouncil(council.Config{
 		Models:     models,
@@ -99,13 +94,40 @@ func run(cmd *cobra.Command, args []string) error {
 		printer.StopModelSpinner(model, duration, err)
 	}
 
-	result := c.Execute(ctx, question, progressCallback)
+	// Phase callback to print phase transitions
+	phaseCallback := func(phase string, modelCount int) {
+		if phase == "review" {
+			printer.PrintReviewStart(modelCount)
+		}
+	}
+
+	result := c.Execute(ctx, question, progressCallback, phaseCallback)
 
 	fmt.Println() // Space after spinners
 
-	// Print individual model responses
-	for _, resp := range result.ModelResponses {
-		printer.PrintModelResponse(resp)
+	// Print individual model responses (only in verbose mode)
+	if verbose {
+		// Show initial prompt
+		printer.PrintPrompt("All Council Models", result.InitialPrompt)
+		
+		for _, resp := range result.ModelResponses {
+			printer.PrintModelResponse(resp)
+		}
+		
+		// Print peer review prompts and results in verbose mode
+		if len(result.Reviews) > 0 {
+			for _, review := range result.Reviews {
+				if prompt, ok := result.ReviewPrompts[review.ReviewerModel]; ok {
+					printer.PrintPrompt(review.ReviewerModel+" (reviewing others)", prompt)
+				}
+			}
+			printer.PrintPeerReviews(result.Reviews)
+		}
+		
+		// Show aggregation prompt
+		if result.AggregationPrompt != "" {
+			printer.PrintPrompt(aggregator+" (Chairman)", result.AggregationPrompt)
+		}
 	}
 
 	// Print aggregation phase
@@ -115,6 +137,11 @@ func run(cmd *cobra.Command, args []string) error {
 			if resp.Error == nil {
 				successCount++
 			}
+		}
+
+		// Show review phase info
+		if len(result.Reviews) > 0 {
+			printer.PrintReviewPhaseComplete(len(result.Reviews), result.ReviewDuration)
 		}
 
 		printer.PrintAggregationStart(aggregator, successCount)
@@ -127,7 +154,7 @@ func run(cmd *cobra.Command, args []string) error {
 
 	// Print summary
 	duration := time.Since(startTime)
-	printer.PrintSummary(result.ModelResponses, duration)
+	printer.PrintSummary(result, duration)
 
 	return nil
 }
