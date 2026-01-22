@@ -1,0 +1,30 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "ci"
+
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "go"
+    commit-message:
+      prefix: "deps"
+    groups:
+      copilot-sdk:
+        patterns:
+          - "github.com/github/copilot-sdk*"
+      cli-tools:
+        patterns:
+          - "github.com/spf13/cobra"
+          - "github.com/fatih/color"
+          - "github.com/briandowns/spinner"

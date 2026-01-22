@@ -1,0 +1,142 @@
+# GoReleaser configuration
+# Documentation: https://goreleaser.com
+
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+    - go mod download
+
+builds:
+  - id: copilot-council
+    main: ./cmd/copilot-council
+    binary: copilot-council
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+    flags:
+      - -trimpath
+
+archives:
+  - id: copilot-council
+    format: tar.gz
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- .Version }}_
+      {{- .Os }}_
+      {{- .Arch }}
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - README.md
+      - LICENSE
+
+checksum:
+  name_template: "checksums.txt"
+
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  use: github
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^ci:"
+      - "^chore:"
+      - "merge conflict"
+      - Merge pull request
+      - Merge remote-tracking branch
+      - Merge branch
+  groups:
+    - title: "New Features"
+      regexp: "^.*feat[(\\w)]*:+.*$"
+      order: 0
+    - title: "Bug Fixes"
+      regexp: "^.*fix[(\\w)]*:+.*$"
+      order: 1
+    - title: "Performance Improvements"
+      regexp: "^.*perf[(\\w)]*:+.*$"
+      order: 2
+    - title: "Refactorings"
+      regexp: "^.*refactor[(\\w)]*:+.*$"
+      order: 3
+    - title: "Documentation"
+      regexp: "^.*docs[(\\w)]*:+.*$"
+      order: 4
+    - title: Other
+      order: 999
+
+release:
+  github:
+    owner: openjny
+    name: council
+  draft: false
+  prerelease: auto
+  name_template: "{{.ProjectName}} v{{.Version}}"
+  header: |
+    ## Council v{{.Version}}
+
+    AI Model Council Pattern CLI Tool
+
+    ### Installation
+
+    #### macOS
+    ```bash
+    brew install openjny/tap/copilot-council
+    ```
+
+    #### Linux
+    ```bash
+    # Download the binary for your platform
+    wget https://github.com/openjny/council/releases/download/v{{.Version}}/copilot-council_{{.Version}}_linux_amd64.tar.gz
+    tar -xzf copilot-council_{{.Version}}_linux_amd64.tar.gz
+    sudo mv copilot-council /usr/local/bin/
+    ```
+
+    #### Windows
+    Download the Windows binary from the assets below.
+
+brews:
+  - name: copilot-council
+    homepage: https://github.com/openjny/council
+    description: "AI Model Council Pattern CLI - Query multiple AI models and aggregate responses"
+    license: MIT
+    repository:
+      owner: openjny
+      name: homebrew-tap
+    commit_author:
+      name: goreleaserbot
+      email: bot@goreleaser.com
+    directory: Formula
+    test: |
+      system "#{bin}/copilot-council --version"
+    install: |
+      bin.install "copilot-council"
+
+nfpms:
+  - id: copilot-council
+    package_name: copilot-council
+    homepage: https://github.com/openjny/council
+    description: "AI Model Council Pattern CLI - Query multiple AI models and aggregate responses"
+    maintainer: openjny
+    license: MIT
+    formats:
+      - deb
+      - rpm
+      - apk
