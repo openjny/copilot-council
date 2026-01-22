@@ -51,11 +51,7 @@ brew tap openjny/tap
 brew install copilot-council
 ```
 
-### Binary Releases
-
-Download from the [releases page](https://github.com/openjny/copilot-council/releases).
-
-#### Linux
+### Linux
 
 ```bash
 wget https://github.com/openjny/copilot-council/releases/latest/download/copilot-council_linux_amd64.tar.gz
@@ -63,11 +59,11 @@ tar -xzf copilot-council_linux_amd64.tar.gz
 sudo mv copilot-council /usr/local/bin/
 ```
 
-#### Windows
+### Windows
 
 Download `copilot-council_windows_amd64.zip` from releases.
 
-### From Source
+### Build From Source
 
 ```bash
 git clone https://github.com/openjny/copilot-council.git
