@@ -151,25 +151,20 @@ particle cannot be described independently of the others...
 
 ## Available Models
 
-### Claude
-- `claude-sonnet-4.5` ⭐ (Default, Recommended)
-- `claude-haiku-4.5` (Fast, cost-effective)
-- `claude-opus-4.5` (Most capable)
+- `claude-sonnet-4.5`
+- `claude-haiku-4.5`
+- `claude-opus-4.5`
 - `claude-sonnet-4`
-
-### GPT
-- `gpt-5.2` ⭐ (Default, Recommended)
-- `gpt-5.2-codex` (Optimized for code)
+- `gpt-5.2`
+- `gpt-5.2-codex`
 - `gpt-5.1-codex-max`
 - `gpt-5.1-codex`
 - `gpt-5.1`
 - `gpt-5`
 - `gpt-5.1-codex-mini`
 - `gpt-5-mini`
-- `gpt-4.1` (Aggregator default)
-
-### Gemini
-- `gemini-3-pro-preview` ⭐ (Default, Recommended)
+- `gpt-4.1`
+- `gemini-3-pro-preview`
 
 You can look up the latest available models via `copilot --help`.
 
