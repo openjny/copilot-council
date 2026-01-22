@@ -108,7 +108,7 @@ func (c *Client) AskMultipleModels(ctx context.Context, models []string, questio
 			}
 			defer func() {
 				if err := session.Destroy(); err != nil {
-					// Log error but don't fail the operation
+					_ = err // Ignore error on cleanup
 				}
 			}()
 
@@ -175,7 +175,7 @@ func (c *Client) AskSingleModel(ctx context.Context, model string, question stri
 	}
 	defer func() {
 		if err := session.Destroy(); err != nil {
-			// Log error but don't fail the operation
+			_ = err // Ignore error on cleanup
 		}
 	}()
 
