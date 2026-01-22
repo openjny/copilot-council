@@ -85,7 +85,7 @@ changelog:
 release:
   github:
     owner: openjny
-    name: council
+    name: copilot-council
   draft: false
   prerelease: auto
   name_template: "{{.ProjectName}} v{{.Version}}"
@@ -114,7 +114,7 @@ release:
 
 brews:
   - name: copilot-council
-    homepage: https://github.com/openjny/council
+    homepage: https://github.com/openjny/copilot-council
     description: "AI Model Council Pattern CLI - Query multiple AI models and aggregate responses"
     license: MIT
     repository:
@@ -132,7 +132,7 @@ brews:
 nfpms:
   - id: copilot-council
     package_name: copilot-council
-    homepage: https://github.com/openjny/council
+    homepage: https://github.com/openjny/copilot-council
     description: "AI Model Council Pattern CLI - Query multiple AI models and aggregate responses"
     maintainer: openjny
     license: MIT

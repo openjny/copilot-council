@@ -52,7 +52,7 @@ brew install copilot-council
 
 ### Binary Releases
 
-Download from the [releases page](https://github.com/openjny/council/releases).
+Download from the [releases page](https://github.com/openjny/copilot-council/releases).
 
 #### Linux
 
